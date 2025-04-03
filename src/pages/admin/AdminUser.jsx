@@ -1,8 +1,10 @@
 import React from 'react'
+import DashboardPage from './pages/Dashboard'
 
 const AdminUser = () => {
+
   return (
-    <div>AdminUser</div>
+    <DashboardPage />
   )
 }
 

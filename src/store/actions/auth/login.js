@@ -6,6 +6,7 @@ export const loginUser = createAsyncThunk("auth/loginUser", async (payload, { })
         const response = await axiosInterceptor.post(`/auth/login`, payload);
         localStorage.setItem("auth_token", response?.data?.data?.token);
         localStorage.setItem("user", JSON.stringify(response?.data?.data?.user));
+        localStorage.setItem("role", response?.data?.data?.user?.role);
         window.location.href = "/";
         return response.data;
     } catch (error) {

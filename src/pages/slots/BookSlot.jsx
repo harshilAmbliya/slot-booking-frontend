@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, Clock, Timer } from "lucide-react"
+import { CalendarIcon, Clock, Loader2, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,7 +31,11 @@ const BookSlot = () => {
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [userBookings, setUserBookings] = useState([])
   const [activeTab, setActiveTab] = useState("book")
-  const [isModelOpen, setIsModelOpen] = useState(false)
+  const [isModelOpen, setIsModelOpen] = useState(false);
+  const [selectedCancelBooking, setSelectedCancelBooking] = useState(null)
+
+  // loadings
+  const [availableTimeSlotsLoading, setAvailableTimeSlotsLoading] = useState(false)
 
   // Format the selected date to match our data format
   const formattedDate = useMemo(() => date ? format(date, "yyyy-MM-dd") : "", [date]);
@@ -48,32 +52,33 @@ const BookSlot = () => {
 
 
   useEffect(() => {
-    dispatch(getAllUsers());
     dispatch(getAllTimeSlots());
 
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getCurrentDateTimeSlots({ date: formattedDate })).then((res) => {
+    dispatch(getCurrentDateTimeSlots({ date: formattedDate, setLoading: setAvailableTimeSlotsLoading })).then((res) => {
       if (res.payload?.data?.slots?.length > 0) {
         setCurrentDateTimeSlots(res.payload?.data?.slots);
       }
     });
   }, [formattedDate, activeTab]);
 
-  console.log(currentDateTimeSlots)
 
   // Filter time slots for the selected date
   const timeSlotsForDate = currentDateTimeSlots.filter((slot) => {
     return slot.date === formattedDate
   })
 
+  console.log(availableTimeSlotsLoading)
+
   // Handle booking a time slot
   const handleBookTimeSlot = () => {
     if (!selectedSlot) return
     dispatch(bookTimeSlot({ timeSlotId: selectedSlot })).then((res) => {
+      setActiveTab("manage")
       if (res.payload) {
-        dispatch(getCurrentDateTimeSlots({ date: formattedDate })).then((res) => {
+        dispatch(getCurrentDateTimeSlots({ date: formattedDate, setLoading: setAvailableTimeSlotsLoading })).then((res) => {
           if (res.payload?.data?.slots?.length > 0) {
             setCurrentDateTimeSlots(res.payload?.data?.slots);
           }
@@ -114,7 +119,7 @@ const BookSlot = () => {
 
   return (
     <div>
-      <div className="header-container flex justify-between items-center bg-gray-100 p-4 px-10">
+      <div className="header-container flex justify-between items-center bg-gray-100 p-4 px-10 sticky top-0 z-10 filter backdrop-blur-sm">
         <h1 className="text-3xl font-bold"><Timer className="w-8 h-8" /> </h1>
         <Button variant="outline" className={'cursor-pointer'} onClick={() => dispatch(logout())}>Logout</Button>
       </div>
@@ -172,7 +177,9 @@ const BookSlot = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {timeSlotsForDate.length > 0 ? (
+                      {availableTimeSlotsLoading ? <div className="flex justify-center items-center h-[150px]">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      </div> : timeSlotsForDate.length > 0 ? (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {timeSlotsForDate.map((slot) => (
                             <Button
@@ -280,29 +287,13 @@ const BookSlot = () => {
                                 {booking?.time_slot?.date} at {booking?.time_slot?.formatted_time}
                               </p>
                             </div>
-                            <Button variant="destructive" size="sm" onClick={() => setIsModelOpen(true)}>
+                            <Button variant="destructive" size="sm" onClick={() => {
+                              setIsModelOpen(true)
+                              setSelectedCancelBooking(booking)
+                            }}>
                               Cancel Booking
                             </Button>
-                            <Dialog open={isModelOpen} onOpenChange={setIsModelOpen}>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Cancel Booking</DialogTitle>
-                                  <DialogDescription>
-                                    Are you sure you want to cancel your booking for {booking?.time_slot?.date} at {booking?.time_slot?.formatted_time}? This
-                                    will free up the time slot for other users.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                  <Button variant="outline" onClick={() => {
-                                    setIsModelOpen(false)
-                                    setActiveTab("book")
-                                  }} className={'cursor-pointer'}>Keep Booking</Button>
-                                  <Button variant="destructive" onClick={() => handleCancelBooking(booking.id)} className={'cursor-pointer'}>
-                                    Yes, Cancel Booking
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
+
                           </div>
                         ))}
                       </div>
@@ -315,6 +306,26 @@ const BookSlot = () => {
                         </Button>
                       </div>
                     )}
+                    <Dialog open={isModelOpen} onOpenChange={setIsModelOpen}>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Cancel Booking</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to cancel your booking for {selectedCancelBooking?.time_slot?.date} at {selectedCancelBooking?.time_slot?.formatted_time}? This
+                            will free up the time slot for other users.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => {
+                            setIsModelOpen(false)
+                            setActiveTab("book")
+                          }} className={'cursor-pointer'}>Keep Booking</Button>
+                          <Button variant="destructive" onClick={() => handleCancelBooking(selectedCancelBooking.id)} className={'cursor-pointer'}>
+                            Yes, Cancel Booking
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </CardContent>
                 </Card>
               </TabsContent>

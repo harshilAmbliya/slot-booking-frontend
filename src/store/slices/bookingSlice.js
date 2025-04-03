@@ -27,7 +27,9 @@ export const bookingSlice = createSlice({
                 state.error = null;
             })
             .addCase(bookTimeSlot.fulfilled, (state, action) => {
-                return action.payload
+                state.loading = false;
+                state.currentBooking = action.payload.data;
+                state.error = null;
             })
             .addCase(bookTimeSlot.rejected, (state, action) => {
                 state.loading = false;
@@ -41,7 +43,8 @@ export const bookingSlice = createSlice({
             })
             .addCase(getMyBookings.fulfilled, (state, action) => {
                 state.loading = false;
-                state.bookings = action.payload;
+                state.bookings = action.payload.data;
+                state.error = null;
             })
             .addCase(getMyBookings.rejected, (state, action) => {
                 state.loading = false;
@@ -55,7 +58,8 @@ export const bookingSlice = createSlice({
             })
             .addCase(cancelBooking.fulfilled, (state, action) => {
                 state.loading = false;
-                state.bookings = action.payload;
+                state.bookings = state.bookings.filter(booking => booking.id !== action.payload.data.id);
+                state.error = null;
             })
             .addCase(cancelBooking.rejected, (state, action) => {
                 state.loading = false;

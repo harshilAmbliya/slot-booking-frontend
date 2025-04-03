@@ -13,13 +13,14 @@ export const getAllTimeSlots = createAsyncThunk(
     }
 );
 
-export const getCurrentDateTimeSlots = createAsyncThunk("users/getCurrentDateTimeSlots", async ({ date }, { }) => {
+export const getCurrentDateTimeSlots = createAsyncThunk("users/getCurrentDateTimeSlots", async ({ date, setLoading }, { }) => {
     try {
+        setLoading && setLoading(true)
         const response = await axiosInterceptor.get(`/time_slots/available?date=${date}`);
-        console.log("response", response);
-
+        setLoading && setLoading(false)
         return response.data
     } catch (error) {
+        setLoading && setLoading(false)
         throw error;
     }
 });

@@ -1,10 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { 
-    getAllTimeSlots, 
-    getTimeSlotById, 
-    createTimeSlot, 
-    updateTimeSlot, 
-    deleteTimeSlot 
+import {
+    getAllTimeSlots,
+    getTimeSlotById,
+    createTimeSlot,
+    updateTimeSlot,
+    deleteTimeSlot
 } from '../actions/timeSlotAction';
 
 const initialState = {
@@ -37,7 +37,8 @@ export const timeSlotSlice = createSlice({
             })
             .addCase(getAllTimeSlots.fulfilled, (state, action) => {
                 state.loading = false;
-                state.timeSlots = action.payload;
+                state.timeSlots = action.payload.data;
+                state.error = null;
             })
             .addCase(getAllTimeSlots.rejected, (state, action) => {
                 state.loading = false;
@@ -105,10 +106,10 @@ export const timeSlotSlice = createSlice({
     }
 });
 
-export const { 
-    clearTimeSlotError, 
-    setSelectedTimeSlot, 
-    clearSelectedTimeSlot 
+export const {
+    clearTimeSlotError,
+    setSelectedTimeSlot,
+    clearSelectedTimeSlot
 } = timeSlotSlice.actions;
 
 export default timeSlotSlice.reducer; 
