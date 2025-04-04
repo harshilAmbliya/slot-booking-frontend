@@ -2,6 +2,8 @@ import React, { Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { route } from "./route.jsx";
 import DashboardLayout from "@/layout/Dashboard.jsx";
+import DashboardUserLayout from "@/layout/DashboardUser.jsx";
+import { Loader2 } from "lucide-react";
 
 export default function Router() {
     const token = localStorage.getItem('auth_token');
@@ -12,7 +14,7 @@ export default function Router() {
 
         let filterRoutes = [];
         route.forEach((route) => {
-            if (route.permission === role || "user") {
+            if (route.permission === role) {
                 filterRoutes.push(route)
             }
         });
@@ -22,20 +24,24 @@ export default function Router() {
     const routes = prepareRoutes();
     return (
         <>
-            <Suspense fallback={<div className="flex justify-center items-center h-screen bg-white">Loading...</div>}>
-                {role === 'user' ? <Routes>
-                    {routes.map((route, index) => {
-                        return route.ele ? (
-                            <Route key={index} exact={true} path={route.path} element={token ? route.ele : <Navigate replace to={"/signin"} />} />
-                        ) : (null)
-                    })}
-                    <Route path='*' element={<Navigate replace to={"/"} />} />
-                </Routes> :
+            <Suspense fallback={<div className="flex justify-center items-center h-screen bg-white">
+                <Loader2 className="h-7 w-7 animate-spin" />
+            </div>}>
+                {role === 'user' ? <DashboardUserLayout>
+                    <Routes>
+                        {routes.map((route, index) => {
+                            console.log(route.element, "route")
+                            return route.element ? (
+                                <Route key={index} exact={true} path={route.path} element={token ? route.element : <Navigate replace to={"/signin"} />} />
+                            ) : (null)
+                        })}
+                        <Route path='*' element={<Navigate replace to={"/"} />} />
+                    </Routes> </DashboardUserLayout> :
                     <DashboardLayout>
                         <Routes>
                             {routes.map((route, index) => {
-                                return route.ele ? (
-                                    <Route key={index} exact={true} path={route.path} element={token ? route.ele : <Navigate replace to={"/signin"} />} />
+                                return route.element ? (
+                                    <Route key={index} exact={true} path={route.path} element={token ? route.element : <Navigate replace to={"/signin"} />} />
                                 ) : (null)
                             })}
                             <Route path='*' element={<Navigate replace to={"/dashboard"} />} />
